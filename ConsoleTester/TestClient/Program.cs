@@ -2,6 +2,7 @@
 using NetworkConveyer.Interfaces;
 using NetworkConveyer.Objects;
 using System;
+using System.IO;
 using System.Net.Sockets;
 using System.Text;
 
@@ -28,6 +29,18 @@ namespace TestClient
                     var package = new ConveyPackage();
                     package.ParseHexMap(hexmap);
                     client.Send(package).Wait();
+                }
+                else if (text.StartsWith("FILE"))
+                {
+                    var filepath = text.Substring(4).Trim();
+                    if (File.Exists(filepath))
+                    {
+                        Console.Write("Loading data from file...");
+                        var bytes = File.ReadAllBytes(filepath);
+                        Console.WriteLine(bytes.Length + " bytes");
+                        var package = new ConveyPackage(bytes);
+                        client.Send(package).Wait();
+                    }
                 }
                 else
                 {

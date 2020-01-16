@@ -2,10 +2,12 @@
 using NetworkConveyer.Objects;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
+using _G = NetworkConveyer.GlobalSettings;
 
 namespace NetworkConveyer
 {
@@ -31,7 +33,14 @@ namespace NetworkConveyer
             var socket = new Socket(SocketType.Dgram, ProtocolType.Udp);
             package.Target = RemoteEndPoint;
             await Task.Factory.StartNew(()=> {
-                socket.SendTo(package.Raw, RemoteEndPoint.ToIPEndPoint());
+                var p = 0;
+                while (p<package.Raw.Length)
+                {
+                    var byteCount = Math.Min(package.Raw.Length - p, _G.LISTENER_BUFFER_SIZE);
+                    var byteToSend = package.Raw.Skip(p).Take(byteCount).ToArray();
+                    p += byteCount;
+                    socket.SendTo(byteToSend, RemoteEndPoint.ToIPEndPoint());
+                }
                 OnPackageSent?.Invoke(package);
             });
         }
